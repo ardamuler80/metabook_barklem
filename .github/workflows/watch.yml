@@ -1,0 +1,40 @@
+name: metabook-watch
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # κάθε 5 λεπτά
+  workflow_dispatch: {}       # χειροκίνητη εκτέλεση από το κουμπί "Run workflow"
+
+permissions:
+  contents: write             # για να αποθηκεύει το state.json
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Run watcher
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python metabook_watch.py
+
+      - name: Save state
+        run: |
+          git config user.name "watcher"
+          git config user.email "watcher@users.noreply.github.com"
+          git add state.json || true
+          git diff --cached --quiet || (git commit -m "update state" && git push)

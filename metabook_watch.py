@@ -58,7 +58,7 @@ def fetch_items(debug=False):
         browser = p.chromium.launch(headless=os.getenv("HEADED") != "1")
         ctx = browser.new_context(locale="el-GR", viewport={"width": 1366, "height": 900})
         page = ctx.new_page()
-        page.goto(SEARCH_URL, wait_until="networkidle", timeout=60000)
+        page.goto(SEARCH_URL, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(2500)
         items = page.evaluate(JS_EXTRACT)
         if debug:
